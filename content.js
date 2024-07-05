@@ -32,7 +32,7 @@ function addSummarizeButton(postElement) {
   
   button.addEventListener('click', async () => {
     button.disabled = true;
-    button.textContent = 'Summarizing...';
+    button.innerHTML = '&#10024; Summarizing...';
     try {
       const summary = await summarize(postElement.innerText);
       displaySummary(summaryElement, summary);
@@ -52,27 +52,20 @@ function addSummarizeButton(postElement) {
 // Function to create a summarize button
 function createSummarizeButton() {
   const button = document.createElement('button');
-  button.textContent = 'Summarize';
+  button.innerHTML = '&#10024; Summarize';
   button.className = SUMMARIZE_BUTTON_CLASS;
   button.style.cssText = `
-    background-color: #0073b1;
-    color: white;
-    border: none;
+    background-color: white;
+    color: #0073b1;
+    border: 2px solid #0073b1;
     padding: 6px 12px;
     font-size: 14px;
+    font-weight: bold;
     cursor: pointer;
     border-radius: 5px;
     margin: 10px 0px;
     transition: background-color 0.3s;
   `;
-  
-  // Add hover effect
-  button.addEventListener('mouseover', () => {
-    button.style.backgroundColor = '#005582';
-  });
-  button.addEventListener('mouseout', () => {
-    button.style.backgroundColor = '#0073b1';
-  });
 
   return button;
 }

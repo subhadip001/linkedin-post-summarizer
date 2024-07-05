@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
                   statusElement.textContent = "Error: Make sure you're on a LinkedIn page.";
               } else if (response && response.status === "activated") {
                   statusElement.textContent = "Summarizer activated! Scroll to see 'Summarize' buttons on long posts.";
+                  activateButton.style.display = "none";
               } else {
                   statusElement.textContent = "Activation failed. Please try again.";
               }
