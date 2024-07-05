@@ -1,130 +1,159 @@
+// Constants
+const SUMMARIZE_BUTTON_CLASS = 'linkedin-summarizer-button';
+const POST_SELECTOR = '.update-components-update-v2__commentary';
+const MIN_POST_LENGTH = 250;
+const HUGGING_FACE_API_URL = 'https://api-inference.huggingface.co/models/sshleifer/distilbart-cnn-12-6';
+const HUGGING_FACE_API_KEY = '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';
+
+// Main function to initialize the extension
+function initExtension() {
+  addSummarizeButtonsToExistingPosts();
+  observePageChanges();
+  observeNewPosts();
+}
+
+// Function to add summarize buttons to existing posts
+function addSummarizeButtonsToExistingPosts() {
+  const posts = document.querySelectorAll(POST_SELECTOR);
+  posts.forEach(addSummarizeButtonIfNeeded);
+}
+
+// Function to add a summarize button to a post if it meets the criteria
+function addSummarizeButtonIfNeeded(postElement) {
+  if (postElement.innerText.length > MIN_POST_LENGTH && !postElement.querySelector(`.${SUMMARIZE_BUTTON_CLASS}`)) {
+    addSummarizeButton(postElement);
+  }
+}
+
+// Function to create and add a summarize button to a post
 function addSummarizeButton(postElement) {
-  const button = document.createElement("button");
-  button.textContent = "Summarize";
-  button.style.padding = "2px 5px";
-  button.style.borderRadius = "5px";
-  button.style.border = "none";
-  button.style.backgroundColor = "#0073b1";
-  button.style.color = "white";
-  button.style.cursor = "pointer";
-
-  const summaryElement = document.createElement("p");
-
-  const body = document.querySelector("body");
-  body.style.scrollBehavior = "smooth";
-
-  button.addEventListener("click", async () => {
+  const button = createSummarizeButton();
+  const summaryElement = document.createElement('p');
+  
+  button.addEventListener('click', async () => {
     button.disabled = true;
-    button.style.cursor = "not-allowed";
-    button.textContent = "Summarizing...";
-    const text = postElement.innerText;
-    const summary = await summarize(text, button);
-    summaryElement.textContent = summary;
-    summaryElement.style.backgroundColor = "transparent";
-    summaryElement.style.padding = "5px";
-    summaryElement.style.border = "2px solid #0073b1";
-    summaryElement.style.borderRadius = "5px";
-    button.remove();
-    postElement.append(summaryElement);
-    postElement.scrollIntoView();
+    button.textContent = 'Summarizing...';
+    try {
+      const summary = await summarize(postElement.innerText);
+      displaySummary(summaryElement, summary);
+      postElement.appendChild(summaryElement);
+      button.remove();
+    } catch (error) {
+      console.error('Summarization failed:', error);
+      button.textContent = 'Summarization failed';
+      button.disabled = false;
+    }
   });
 
-  postElement.appendChild(document.createElement("br"));
-  postElement.appendChild(document.createElement("br"));
-
+  postElement.appendChild(document.createElement('br'));
   postElement.appendChild(button);
 }
 
-function activateExtension() {
-  let allPostElements;
-  const postElements = document.querySelectorAll(
-    ".update-components-update-v2__commentary"
-  );
-
-  allPostElements = [...postElements];
-  console.log(allPostElements);
-  allPostElements.forEach((postElement) => {
-    if (postElement.innerText.length > 250) {
-      addSummarizeButton(postElement);
-    }
+// Function to create a summarize button
+function createSummarizeButton() {
+  const button = document.createElement('button');
+  button.textContent = 'Summarize';
+  button.className = SUMMARIZE_BUTTON_CLASS;
+  button.style.cssText = `
+    background-color: #0073b1;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 5px;
+    margin: 10px 0px;
+    transition: background-color 0.3s;
+  `;
+  
+  // Add hover effect
+  button.addEventListener('mouseover', () => {
+    button.style.backgroundColor = '#005582';
   });
-  console.log("Extension activated");
+  button.addEventListener('mouseout', () => {
+    button.style.backgroundColor = '#0073b1';
+  });
+
+  return button;
 }
 
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  if (request.action === "activateExtension") {
-    activateExtension();
-  }
-});
+// Function to display the summary
+function displaySummary(element, summary) {
+  element.textContent = summary;
+  element.style.cssText = `
+    background-color: #f3f6f8;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+    font-style: italic;
+  `;
+}
 
+// Function to observe page changes
+function observePageChanges() {
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'childList' && isSignificantDOMChange(mutation.target)) {
+        setTimeout(addSummarizeButtonsToExistingPosts, 1000);
+      }
+    });
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
+// Function to check if a DOM change is significant
+function isSignificantDOMChange(target) {
+  return target.tagName === 'BODY' || target.id === 'main' || target.id === 'content';
+}
+
+// Function to observe new posts
 function observeNewPosts() {
-  const postContainer = document.querySelector(
-    ".scaffold-finite-scroll__content"
-  );
-  if (!postContainer) {
-    return;
-  }
-  const observer = new MutationObserver(function (mutations) {
-    mutations.forEach(function (mutation) {
-      if (mutation.addedNodes.length > 0) {
-        const newPosts = Array.from(mutation.addedNodes).filter((node) =>
-          node?.classList?.contains("update-components-update-v2__commentary")
-        );
-
-        newPosts.forEach((post) => {
-          if (post.innerText.length > 250) {
-            addSummarizeButton(post);
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'childList') {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const posts = node.querySelectorAll(POST_SELECTOR);
+            posts.forEach(addSummarizeButtonIfNeeded);
           }
         });
       }
     });
   });
 
-  observer.observe(postContainer, {
-    childList: true,
-    subtree: true,
-  });
+  observer.observe(document.body, { childList: true, subtree: true });
 }
 
-activateExtension();
-observeNewPosts();
+// Function to summarize text using Hugging Face API
+async function summarize(text) {
+  const response = await fetch(HUGGING_FACE_API_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${HUGGING_FACE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ inputs: text }),
+  });
 
-const pegasus = "tuner007/pegasus_summarizer"
-const distilbart = "sshleifer/distilbart-cnn-12-6"
-const pszemraj = "pszemraj/long-t5-tglobal-base-16384-book-summary"
-const azma = "Azma-AI/bart-conversation-summarizer"
+  if (!response.ok) {
+    throw new Error(`API request failed with status ${response.status}`);
+  }
 
-async function query(data) {
-  const response = await fetch(
-    `https://api-inference.huggingface.co/models/${distilbart}`,
-    {
-      headers: {
-        Authorization: "Bearer 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",
-      },
-      method: "POST",
-      body: JSON.stringify(data),
-    }
-  );
   const result = await response.json();
-  console.log(result);
-  return result;
+  return result[0]?.summary_text || 'Summary not available.';
 }
 
-function summarize(text) {
-  return new Promise((resolve, reject) => {
-    const data = {
-      inputs: text,
-    };
+// Initialize the extension
+initExtension();
 
-    query(data)
-      .then((result) => {
-        const summary = result[0]?.summary_text;
-        //console.log(summary);
-        resolve(summary);
-      })
-      .catch((error) => {
-        console.log(error);
-        reject(error);
-      });
-  });
-}
+// Listen for messages from the background script
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "activateExtension") {
+    console.log("Activation message received from popup");
+    initExtension();
+    sendResponse({status: "activated"});
+    return true; // Indicates that the response will be sent asynchronously
+  }
+});
+

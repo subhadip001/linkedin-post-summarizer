@@ -1,14 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LinkedIn Post Summarizer</title>
-  </head>
-  <body>
-    <h1>Welcome to My Extension</h1>
-    <p>Click the button below to perform an action.</p>
-    <button id="actionButton">Do Something</button>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            width: 300px;
+            padding: 15px;
+            background-color: #f3f6f8;
+        }
+        h1 {
+            color: #0073b1;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 14px;
+            line-height: 1.4;
+            color: #333;
+        }
+        #activateButton {
+            background-color: #0073b1;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        #activateButton:hover {
+            background-color: #005582;
+        }
+        #status {
+            margin-top: 10px;
+            font-style: italic;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>LinkedIn Post Summarizer</h1>
+    <p>This extension adds a 'Summarize' button to long LinkedIn posts. Click the button below to activate the summarizer on the current page.</p>
+    <button id="activateButton">Activate Summarizer</button>
+    <p id="status"></p>
     <script src="popup.js"></script>
-  </body>
+</body>
 </html>
