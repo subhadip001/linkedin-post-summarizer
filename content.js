@@ -2,8 +2,8 @@
 const SUMMARIZE_BUTTON_CLASS = 'linkedin-summarizer-button';
 const POST_SELECTOR = '.update-components-update-v2__commentary';
 const MIN_POST_LENGTH = 250;
-const HUGGING_FACE_API_URL = 'https://api-inference.huggingface.co/models/sshleifer/distilbart-cnn-12-6';
-const HUGGING_FACE_API_KEY = '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';
+const HOSTED_API_URL = 'https://ujfosx6cdgcqun7gzkk2cs2d2m0kcpbf.lambda-url.ap-south-1.on.aws/api/v1/summarize';
+const LOCAL_API_URL = 'http://localhost:9090/api/v1/summarize';
 
 // Main function to initialize the extension
 function initExtension() {
@@ -33,6 +33,12 @@ function addSummarizeButton(postElement) {
   button.addEventListener('click', async () => {
     button.disabled = true;
     button.innerHTML = '&#10024; Summarizing...';
+    if (postElement.innerText === '' || postElement.innerText === undefined) {
+      button.textContent = 'Post is empty';
+      button.disabled = false;
+      console.log(postElement);
+      return;
+    }
     try {
       const summary = await summarize(postElement.innerText);
       displaySummary(summaryElement, summary);
@@ -72,13 +78,12 @@ function createSummarizeButton() {
 
 // Function to display the summary
 function displaySummary(element, summary) {
-  element.textContent = summary;
+  element.innerText = summary.replace(/\n/g, '\n');
   element.style.cssText = `
     background-color: #f3f6f8;
     padding: 10px;
     border-radius: 5px;
     margin-top: 10px;
-    font-style: italic;
   `;
 }
 
@@ -120,21 +125,21 @@ function observeNewPosts() {
 
 // Function to summarize text using Hugging Face API
 async function summarize(text) {
-  const response = await fetch(HUGGING_FACE_API_URL, {
+  const response = await fetch(HOSTED_API_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${HUGGING_FACE_API_KEY}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ inputs: text }),
+    body: JSON.stringify({ post: text }),
   });
 
   if (!response.ok) {
+    console.log(response);
     throw new Error(`API request failed with status ${response.status}`);
   }
 
   const result = await response.json();
-  return result[0]?.summary_text || 'Summary not available.';
+  return result?.summarizedText || 'Summary not available.';
 }
 
 // Initialize the extension
