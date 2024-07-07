@@ -138,7 +138,7 @@ function observeNewPosts() {
 
 // Function to summarize text using Hugging Face API
 async function summarize(text, summaryElement) {
-  const response = await fetch(LOCAL_API_URL, {
+  const response = await fetch(HOSTED_API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
