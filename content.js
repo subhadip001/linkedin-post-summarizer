@@ -28,7 +28,15 @@ function addSummarizeButtonIfNeeded(postElement) {
 // Function to create and add a summarize button to a post
 function addSummarizeButton(postElement) {
   const button = createSummarizeButton();
-  const summaryElement = document.createElement('p');
+  const summaryElement = document.createElement('div');
+  summaryElement.className = 'summary-element';
+  summaryElement.style.cssText = `
+    background-color: #f3f6f8;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+    display: none; // Initially hidden
+  `;
   
   button.addEventListener('click', async () => {
     button.disabled = true;
@@ -40,20 +48,22 @@ function addSummarizeButton(postElement) {
       return;
     }
     try {
-      const summary = await summarize(postElement.innerText);
-      displaySummary(summaryElement, summary);
+      summaryElement.style.display = 'block'; // Show the summary element
       postElement.appendChild(summaryElement);
+      await summarize(postElement.innerText, summaryElement);
       button.remove();
     } catch (error) {
       console.error('Summarization failed:', error);
       button.textContent = 'Summarization failed';
       button.disabled = false;
+      summaryElement.remove();
     }
   });
 
   postElement.appendChild(document.createElement('br'));
   postElement.appendChild(button);
 }
+
 
 // Function to create a summarize button
 function createSummarizeButton() {
@@ -78,7 +88,10 @@ function createSummarizeButton() {
 
 // Function to display the summary
 function displaySummary(element, summary) {
-  element.innerText = summary.replace(/\n/g, '\n');
+  const formattedSummary = summary
+    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+    .replace(/\n/g, '<br>');
+  element.innerHTML = formattedSummary
   element.style.cssText = `
     background-color: #f3f6f8;
     padding: 10px;
@@ -124,13 +137,16 @@ function observeNewPosts() {
 }
 
 // Function to summarize text using Hugging Face API
-async function summarize(text) {
-  const response = await fetch(HOSTED_API_URL, {
+async function summarize(text, summaryElement) {
+  const response = await fetch(LOCAL_API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ post: text }),
+    body: JSON.stringify({
+      post: text,
+      preferredLanguage: "english"
+    }),
   });
 
   if (!response.ok) {
@@ -138,8 +154,42 @@ async function summarize(text) {
     throw new Error(`API request failed with status ${response.status}`);
   }
 
-  const result = await response.json();
-  return result?.summarizedText || 'Summary not available.';
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let summary = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value);
+    const lines = chunk.split('\n\n');
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        const data = JSON.parse(line.slice(6));
+        if (data.content) {
+          summary += data.content;
+          // Update the UI with the current summary
+          updateSummaryUI(summaryElement, summary);
+        } else if (data.done) {
+          console.log('Stream ended');
+        } else if (data.error) {
+          console.error('Error:', data.error);
+          throw new Error(data.error);
+        }
+      }
+    }
+  }
+
+  return summary || 'Summary not available.';
+}
+
+// Function to update the summary UI as it's being generated
+function updateSummaryUI(summaryElement, currentSummary) {
+  const formattedSummary = currentSummary
+    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+    .replace(/\n/g, '<br>');
+  summaryElement.innerHTML = formattedSummary;
 }
 
 // Initialize the extension
