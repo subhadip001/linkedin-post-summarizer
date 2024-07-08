@@ -1,9 +1,10 @@
 // Constants
 const SUMMARIZE_BUTTON_CLASS = 'linkedin-summarizer-button';
 const POST_SELECTOR = '.update-components-update-v2__commentary';
-const MIN_POST_LENGTH = 250;
+const MIN_POST_LENGTH = 300;
 const HOSTED_API_URL = 'https://ujfosx6cdgcqun7gzkk2cs2d2m0kcpbf.lambda-url.ap-south-1.on.aws/api/v1/summarize';
 const LOCAL_API_URL = 'http://localhost:9090/api/v1/summarize';
+const API_URL = HOSTED_API_URL;
 
 // Main function to initialize the extension
 function initExtension() {
@@ -138,7 +139,7 @@ function observeNewPosts() {
 
 // Function to summarize text using Hugging Face API
 async function summarize(text, summaryElement) {
-  const response = await fetch(HOSTED_API_URL, {
+  const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
