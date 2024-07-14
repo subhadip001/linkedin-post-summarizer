@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="google-signin-client_id" content="YOUR_CLIENT_ID.apps.googleusercontent.com">
     <title>LinkedIn Post Summarizer</title>
     <style>
         body {
@@ -46,7 +47,10 @@
     <h1>LinkedIn Post Summarizer</h1>
     <p>This extension adds a 'Summarize' button to long LinkedIn posts. Click the button below to activate the summarizer on the current page.</p>
     <button id="activateButton">Activate Summarizer</button>
+    <!-- <button id="loginButton">Sign In</button> -->
+
     <p id="status"></p>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="popup.js"></script>
 </body>
 </html>

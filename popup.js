@@ -1,6 +1,28 @@
 document.addEventListener("DOMContentLoaded", function () {
   const activateButton = document.getElementById("activateButton");
   const statusElement = document.getElementById("status");
+  const loginButton = document.getElementById("loginButton"); // Add this line
+
+  // Add this function
+  function onSignIn(googleUser) {
+    var profile = googleUser.getBasicProfile();
+    console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+    console.log('Name: ' + profile.getName());
+    console.log('Image URL: ' + profile.getImageUrl());
+    console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+  }
+
+  // Add this event listener
+  loginButton.addEventListener("click", function () {
+    gapi.signin2.render('loginButton', {
+      'scope': 'profile email',
+      'width': 240,
+      'height': 50,
+      'longtitle': true,
+      'theme': 'dark',
+      'onsuccess': onSignIn,
+    });
+  });
 
   activateButton.addEventListener("click", function () {
       // Send a message to the content script to activate summarization

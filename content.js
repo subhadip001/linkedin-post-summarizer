@@ -2,8 +2,8 @@
 const SUMMARIZE_BUTTON_CLASS = 'linkedin-summarizer-button';
 const POST_SELECTOR = '.update-components-update-v2__commentary';
 const MIN_POST_LENGTH = 300;
-const HOSTED_API_URL = '';
-const LOCAL_API_URL = '';
+const HOSTED_API_URL = 'https://ujfosx6cdgcqun7gzkk2cs2d2m0kcpbf.lambda-url.ap-south-1.on.aws/api/v1/summarize';
+const LOCAL_API_URL = 'http://localhost:9090/api/v1/summarize';
 const API_URL = HOSTED_API_URL;
 
 // Main function to initialize the extension
